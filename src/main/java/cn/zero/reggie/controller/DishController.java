@@ -136,4 +136,27 @@ public class DishController {
         }).collect(Collectors.toList());
         return R.success(res);
     }
+
+    /**
+     * 修改菜品状态
+     * @param ids
+     * @return
+     */
+    @PostMapping("/status/{st}")
+    public R<String> setStatus(@RequestParam List<Long> ids,@PathVariable int st){
+        log.info("setStatus....");
+        dishService.setStatus(st, ids);
+        return R.success("修改状态成功");
+    }
+
+    /**
+     * 根据 id 删除菜品
+     * @param ids
+     * @return
+     */
+    @DeleteMapping
+    public R<String> delete(@RequestParam List<Long> ids){
+        dishService.deleteWithFlavor(ids);
+        return R.success("删除菜品成功");
+    }
 }

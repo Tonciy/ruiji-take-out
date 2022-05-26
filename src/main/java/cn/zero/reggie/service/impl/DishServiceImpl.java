@@ -1,6 +1,7 @@
 package cn.zero.reggie.service.impl;
 
 
+import cn.zero.reggie.common.CustomException;
 import cn.zero.reggie.dto.DishDto;
 import cn.zero.reggie.entity.Dish;
 import cn.zero.reggie.entity.DishFlavor;
@@ -8,6 +9,7 @@ import cn.zero.reggie.mapper.DishMapper;
 import cn.zero.reggie.service.DishFlavorService;
 import cn.zero.reggie.service.DishService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -79,5 +81,35 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
             return item;
         }).collect(Collectors.toList());
         dishFlavorService.saveBatch(flavors);
+    }
+
+    @Override
+    @Transactional
+    public void setStatus(int status, List<Long> ids) {
+        for (Long id : ids) {
+            LambdaUpdateWrapper<Dish> updateWrapper = new LambdaUpdateWrapper<>();
+            updateWrapper.eq(Dish::getId, id);
+            updateWrapper.set(Dish::getStatus, status);
+            this.update(updateWrapper);
+        }
+
+    }
+
+    @Override
+    public void deleteWithFlavor(List<Long> ids) {
+        // 查询要删除的菜品中是否包含在售状态
+        LambdaQueryWrapper<Dish> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.in(Dish::getId, ids);
+        queryWrapper.eq(Dish::getStatus, 1);
+        int count = this.count(queryWrapper);
+        if(count > 0){
+            throw new CustomException("含菜品处于在售状态，删除失败");
+        }
+        // 删除菜品表的数据
+        this.removeByIds(ids);
+        // 删除口味表中对应数据
+        LambdaQueryWrapper<DishFlavor> queryWrapper1 = new LambdaQueryWrapper<>();
+        queryWrapper1.in(DishFlavor::getDishId, ids);
+        dishFlavorService.remove(queryWrapper1);
     }
 }

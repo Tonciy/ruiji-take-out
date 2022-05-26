@@ -35,4 +35,11 @@ public interface SetMealService extends IService<Setmeal> {
      * @param ids
      */
     void deleteWithDish(List<Long> ids);
+
+    /**
+     * 批量修改套餐信息
+     * @param ids
+     * @param status
+     */
+    void setStatus(List<Long> ids, int status);
 }

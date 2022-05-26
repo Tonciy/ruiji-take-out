@@ -76,4 +76,16 @@ public class SetmealController {
 
         return R.success(res);
     }
+
+    /**
+     * 修改套餐状态信息
+     * @param status
+     * @param ids
+     * @return
+     */
+    @PostMapping("/status/{status}")
+    public R<String> setStatus(@PathVariable int status, @RequestParam List<Long> ids){
+        setMealService.setStatus(ids, status);
+        return R.success("修改成功");
+    }
 }

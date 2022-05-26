@@ -4,6 +4,8 @@ import cn.zero.reggie.dto.DishDto;
 import cn.zero.reggie.entity.Dish;
 import com.baomidou.mybatisplus.extension.service.IService;
 
+import java.util.List;
+
 /**
  * @author Zero
  * @Description 描述此类
@@ -29,4 +31,18 @@ public interface DishService extends IService<Dish> {
      * @param dishDto
      */
     void updateWithFlavor(DishDto dishDto);
+
+
+    /**
+     * 修改菜品状态
+     * @param status
+     * @param ids
+     */
+    void setStatus(int status, List<Long> ids);
+
+    /**
+     * 批量删除菜品
+     * @param ids
+     */
+    void deleteWithFlavor(List<Long> ids);
 }

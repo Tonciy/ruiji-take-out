@@ -13,6 +13,7 @@ import cn.zero.reggie.service.DishFlavorService;
 import cn.zero.reggie.service.SetMealService;
 import cn.zero.reggie.service.SetmealDishService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
@@ -84,7 +85,7 @@ public class SetMealServiceImpl extends ServiceImpl<SetMealMapper, Setmeal> impl
         LambdaQueryWrapper<Setmeal> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.in(Setmeal::getId, ids);
         queryWrapper.eq(Setmeal::getStatus, 1);
-        int count = this.count();
+        int count = this.count(queryWrapper);
         if(count > 0){
             throw new CustomException("含套餐处于在售状态，删除失败");
         }
@@ -94,5 +95,16 @@ public class SetMealServiceImpl extends ServiceImpl<SetMealMapper, Setmeal> impl
         LambdaQueryWrapper<SetmealDish> setmealDishLambdaQueryWrapper = new LambdaQueryWrapper<>();
         setmealDishLambdaQueryWrapper.in(SetmealDish::getSetmealId, ids);
         setmealDishService.remove(setmealDishLambdaQueryWrapper);
+    }
+
+    @Override
+    @Transactional
+    public void setStatus(List<Long> ids, int status) {
+        for (Long id : ids) {
+            LambdaUpdateWrapper<Setmeal> updateWrapper = new LambdaUpdateWrapper<>();
+            updateWrapper.eq(Setmeal::getId, id);
+            updateWrapper.set(Setmeal::getStatus, status);
+            this.update(updateWrapper);
+        }
     }
 }
