@@ -2,12 +2,16 @@ package cn.zero.reggie.service.impl;
 
 import cn.zero.reggie.common.BaseContext;
 import cn.zero.reggie.common.CustomException;
+import cn.zero.reggie.dto.OrdersDto;
 import cn.zero.reggie.entity.*;
 import cn.zero.reggie.mapper.OrderMapper;
 import cn.zero.reggie.service.*;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -88,5 +92,23 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Orders> implement
 
         // 清空购物车数据
         shoppingCartService.remove(queryWrapper);
+    }
+
+    @Override
+    public Page list(int page, int pageSize, Long orderId) {
+        // 构建查询构造器
+        LambdaQueryWrapper<Orders> queryWrapper = new LambdaQueryWrapper<Orders>();
+        queryWrapper.like(orderId != null,Orders::getId, orderId);
+        queryWrapper.orderByDesc(Orders::getOrderTime);
+        Page<Orders> ordersPage = (Page<Orders>) new Page<Orders>(page, pageSize);
+        this.page(ordersPage, queryWrapper);
+//        // 构建DTO对象进行封装
+//        List<OrdersDto> ordersDtoList = ordersPage.getRecords().stream().map((item) -> {
+//            OrdersDto ordersDto = new OrdersDto();
+//            BeanUtils.copyProperties(item, ordersDto);
+//            item.get
+//            return ordersDto;
+//        }).collect(Collectors.toList());
+        return ordersPage;
     }
 }
