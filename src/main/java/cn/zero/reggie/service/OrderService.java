@@ -5,6 +5,8 @@ import cn.zero.reggie.entity.Orders;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -20,11 +22,22 @@ public interface OrderService extends IService<Orders> {
     void submit(Orders orders);
 
     /**
-     * 分页查询
+     * 后台管理总分页查询
      * @param page
      * @param pageSize
      * @param orderId
+     * @param beginTime
+     * @param endTime
      * @return
      */
-    Page list(int page, int pageSize, Long orderId);
+    Page page(int page, int pageSize, Long orderId, String beginTime, String endTime);
+
+    /**
+     * 用户订单分页查询
+     * @param page
+     * @param pageSize
+     * @param userId
+     * @return
+     */
+    Page userPage(int page, int pageSize, Long userId);
 }

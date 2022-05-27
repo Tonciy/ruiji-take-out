@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -95,20 +96,46 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Orders> implement
     }
 
     @Override
-    public Page list(int page, int pageSize, Long orderId) {
+    public Page page(int page, int pageSize, Long orderId, String beginTime, String endTime) {
         // 构建查询构造器
         LambdaQueryWrapper<Orders> queryWrapper = new LambdaQueryWrapper<Orders>();
         queryWrapper.like(orderId != null,Orders::getId, orderId);
         queryWrapper.orderByDesc(Orders::getOrderTime);
+        queryWrapper.apply(StringUtils.isNotBlank(beginTime), "date_format(order_time, '%Y-%m-%d %h:%m:%s') >= '" + beginTime + "'");
+        queryWrapper.apply(StringUtils.isNotBlank(endTime), "date_format(order_time, '%Y-%m-%d %h:%m:%s') <= '" + endTime+ "'");
         Page<Orders> ordersPage = (Page<Orders>) new Page<Orders>(page, pageSize);
         this.page(ordersPage, queryWrapper);
-//        // 构建DTO对象进行封装
-//        List<OrdersDto> ordersDtoList = ordersPage.getRecords().stream().map((item) -> {
-//            OrdersDto ordersDto = new OrdersDto();
-//            BeanUtils.copyProperties(item, ordersDto);
-//            item.get
-//            return ordersDto;
-//        }).collect(Collectors.toList());
+
         return ordersPage;
+    }
+
+    @Override
+    public Page userPage(int page, int pageSize, Long userId) {
+        // 构建查询构造器
+        LambdaQueryWrapper<Orders> queryWrapper = new LambdaQueryWrapper<Orders>();
+        queryWrapper.like(userId != null,Orders::getUserId, userId);
+        queryWrapper.orderByDesc(Orders::getOrderTime);
+        Page<Orders> ordersPage = (Page<Orders>) new Page<Orders>(page, pageSize);
+        this.page(ordersPage, queryWrapper);
+        // 构造DTO 对象
+        List<OrdersDto> ordersDtoList = ordersPage.getRecords().stream().map((item) -> {
+            OrdersDto ordersDto = new OrdersDto();
+            // 拷贝基本属性
+            BeanUtils.copyProperties(item, ordersDto);
+            // 查询对应订单明显表
+            Long orderId = item.getId();
+            LambdaQueryWrapper<OrderDetail> orderDetailLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            orderDetailLambdaQueryWrapper.eq(OrderDetail::getId, orderId);
+            List<OrderDetail> list = orderDetailService.list(orderDetailLambdaQueryWrapper);
+            // 复制给 DTO 对象
+            ordersDto.setOrderDetails(list);
+            return ordersDto;
+        }).collect(Collectors.toList());
+        // 构造状态DTO的分页对象
+        Page<OrdersDto> ordersDtoPage = new Page<>();
+        // 拷贝属性
+        BeanUtils.copyProperties(ordersPage, ordersDtoPage);
+        ordersDtoPage.setRecords(ordersDtoList);
+        return ordersDtoPage;
     }
 }
