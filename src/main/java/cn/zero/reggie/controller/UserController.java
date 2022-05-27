@@ -69,6 +69,7 @@ public class UserController {
             if(user == null){
                 // 当前手机号为新用户
                 user = new User();
+                user.setName("用户" + phone.substring(phone.length() - 4));
                 user.setPhone(phone);
                 user.setStatus(1);
                 userService.save(user);
@@ -77,5 +78,15 @@ public class UserController {
             return R.success(user);
         }
         return R.error("登录失败");
+    }
+
+    /**
+     * 用户退出账号
+     * @return
+     */
+    @PostMapping("/loginout")
+    public R<String> loginOut(HttpSession httpSession){
+        httpSession.removeAttribute("user");
+        return R.success("退出成功");
     }
 }

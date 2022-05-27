@@ -115,8 +115,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Orders> implement
         LambdaQueryWrapper<Orders> queryWrapper = new LambdaQueryWrapper<Orders>();
         queryWrapper.like(userId != null,Orders::getUserId, userId);
         queryWrapper.orderByDesc(Orders::getOrderTime);
-        Page<Orders> ordersPage = (Page<Orders>) new Page<Orders>(page, pageSize);
+        Page<Orders> ordersPage =  new Page<Orders>(page, pageSize);
         this.page(ordersPage, queryWrapper);
+        // 构造状态DTO的分页对象
+        Page<OrdersDto> ordersDtoPage = new Page<>();
+        // 拷贝属性
+        BeanUtils.copyProperties(ordersPage, ordersDtoPage);
         // 构造DTO 对象
         List<OrdersDto> ordersDtoList = ordersPage.getRecords().stream().map((item) -> {
             OrdersDto ordersDto = new OrdersDto();
@@ -125,16 +129,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Orders> implement
             // 查询对应订单明显表
             Long orderId = item.getId();
             LambdaQueryWrapper<OrderDetail> orderDetailLambdaQueryWrapper = new LambdaQueryWrapper<>();
-            orderDetailLambdaQueryWrapper.eq(OrderDetail::getId, orderId);
+            orderDetailLambdaQueryWrapper.eq(OrderDetail::getOrderId, orderId);
             List<OrderDetail> list = orderDetailService.list(orderDetailLambdaQueryWrapper);
             // 复制给 DTO 对象
             ordersDto.setOrderDetails(list);
             return ordersDto;
         }).collect(Collectors.toList());
-        // 构造状态DTO的分页对象
-        Page<OrdersDto> ordersDtoPage = new Page<>();
-        // 拷贝属性
-        BeanUtils.copyProperties(ordersPage, ordersDtoPage);
         ordersDtoPage.setRecords(ordersDtoList);
         return ordersDtoPage;
     }
