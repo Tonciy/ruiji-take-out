@@ -4,11 +4,16 @@ import cn.zero.reggie.common.R;
 import cn.zero.reggie.dto.SetmealDto;
 import cn.zero.reggie.entity.Dish;
 import cn.zero.reggie.entity.Setmeal;
+import cn.zero.reggie.entity.SetmealDish;
 import cn.zero.reggie.service.SetMealService;
+import cn.zero.reggie.service.SetmealDishService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,11 +31,14 @@ public class SetmealController {
     private SetMealService setMealService;
 
 
+    @Autowired
+    private SetmealDishService setmealDishService;
     /**
      * 新增套餐
      * @return
      */
     @PostMapping
+    @CacheEvict(value = "setmealCache", key = "#setmealDto.categoryId + '_' + #setmealDto.status")
     public R<String> save(@RequestBody SetmealDto setmealDto){
         log.info("新增套餐...");
         setMealService.addSetMealWithDish(setmealDto);
@@ -54,6 +62,7 @@ public class SetmealController {
      * @return
      */
     @DeleteMapping
+    @CacheEvict(value = "setmealCache", allEntries = true)
     public R<String> delete(@RequestParam List<Long> ids){
         log.info("删除套餐：{}", ids.toString());
         setMealService.deleteWithDish(ids);
@@ -66,6 +75,7 @@ public class SetmealController {
      * @return
      */
     @GetMapping("/list")
+    @Cacheable(value = "setmealCache",key = "#setmeal.categoryId + '_' + #setmeal.status")
     public R<List<Setmeal>> list(Setmeal setmeal){
         LambdaQueryWrapper<Setmeal> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(setmeal.getCategoryId() != null, Setmeal::getCategoryId, setmeal.getCategoryId());
@@ -83,9 +93,31 @@ public class SetmealController {
      * @param ids
      * @return
      */
+    @CacheEvict(value = "setmealCache", allEntries = true)
     @PostMapping("/status/{status}")
     public R<String> setStatus(@PathVariable int status, @RequestParam List<Long> ids){
         setMealService.setStatus(ids, status);
         return R.success("修改成功");
+    }
+
+    /**
+     * 根据 id 获取对应的套餐具体信息
+     * @param id
+     * @return
+     */
+    @GetMapping("/{id}")
+    public R<SetmealDto> getSetmeal(@PathVariable Long id){
+        // 查询套餐基本信息
+        Setmeal setmeal = setMealService.getById(id);
+        // 构建 Dto 对象，进行额外属性封装
+        SetmealDto setmealDto = new SetmealDto();
+        BeanUtils.copyProperties(setmeal, setmealDto);
+        // 查询此套餐对应的菜品信息
+        LambdaQueryWrapper<SetmealDish> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(id != null,SetmealDish::getSetmealId, id);
+        queryWrapper.orderByDesc(SetmealDish::getUpdateTime);
+        List<SetmealDish> setmealDishList = setmealDishService.list(queryWrapper);
+        setmealDto.setSetmealDishes(setmealDishList);
+        return R.success(setmealDto);
     }
 }

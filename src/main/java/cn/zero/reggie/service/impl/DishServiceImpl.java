@@ -14,6 +14,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +30,8 @@ import java.util.stream.Collectors;
 public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements DishService {
     @Autowired
     private DishFlavorService dishFlavorService;
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     /**
      * 新增菜品，同时保存对应的口味数据
@@ -86,11 +89,16 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
     @Override
     @Transactional
     public void setStatus(int status, List<Long> ids) {
+        // 缓存中的 key 前缀
+        String keyPrefix = "dish_";
         for (Long id : ids) {
             LambdaUpdateWrapper<Dish> updateWrapper = new LambdaUpdateWrapper<>();
             updateWrapper.eq(Dish::getId, id);
             updateWrapper.set(Dish::getStatus, status);
             this.update(updateWrapper);
+            // 清除缓存
+            Dish dish = this.getById(id);
+            redisTemplate.delete(keyPrefix + dish.getCategoryId());
         }
 
     }
