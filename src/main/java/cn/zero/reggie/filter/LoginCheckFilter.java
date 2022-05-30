@@ -36,7 +36,11 @@ public class LoginCheckFilter implements Filter {
             "/front/**",
             "/common/**",
             "/user/login",  // 移动端发送短信
-            "/user/sendMsg" // 移动端登录
+            "/user/sendMsg", // 移动端登录
+            "/doc.html",     // 后续都是 knife4j 的路径
+            "/webjars/**",
+            "/swagger-resources",
+            "/v2/api-docs"
      };
 
     @Override

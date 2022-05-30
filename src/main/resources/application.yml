@@ -29,6 +29,6 @@ mybatis-plus:
     db-config:
       id-type: ASSIGN_ID
 
-
+# 图片存放位置
 reggie:
   path: D:\img\
