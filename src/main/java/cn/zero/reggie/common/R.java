@@ -28,6 +28,12 @@ public class R<T> implements Serializable {
         return r;
     }
 
+    /**
+     *
+     * @param msg
+     * @param <T>
+     * @return
+     */
     public static <T> R<T> error(String msg) {
         R r = new R();
         r.msg = msg;
@@ -35,6 +41,12 @@ public class R<T> implements Serializable {
         return r;
     }
 
+    /**
+     *
+     * @param key
+     * @param value
+     * @return
+     */
     public R<T> add(String key, Object value) {
         this.map.put(key, value);
         return this;

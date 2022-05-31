@@ -49,7 +49,7 @@ public class UserController {
             String code = ValidateCodeUtils.generateValidateCode(4).toString();
             log.info("code={}", code);
             // 发送短息
-//            SMSUtils.sendMessage("阿里云短信测试","SMS_154950909",phone,code);
+            SMSUtils.sendMessage("阿里云短信测试","SMS_154950909",phone,code);
             // 存入 session
 //            httpSession.setAttribute(phone, code);
             // 存入 Redis
